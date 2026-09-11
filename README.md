@@ -1,63 +1,150 @@
+# Enrollment & Outpatient Visit Processing Pipeline
 
-# Enrollment and Outpatient Visit Processing Pipeline
+A healthcare data-processing workflow that converts monthly enrollment records into continuous enrollment periods, validates span logic, and enriches each span with outpatient-visit utilization measures.
 
-This pipeline processes monthly patient enrollment data and calculates continuous enrollment spans, including outpatient visit statistics during those spans.
+> **Portfolio note:** This repository is shared as a professional work sample demonstrating data transformation, QA, enrichment, logging, and reproducible workflow design. No raw patient-level data are included.
 
+## What this pipeline does
 
-## Files and Structure enrollment-visit-pipeline/ 
-```
+The workflow:
+
+1. loads monthly enrollment records and outpatient visit data;
+2. standardizes and sorts enrollment dates;
+3. groups consecutive enrollment months into continuous enrollment spans;
+4. optionally runs QA checks on span continuity and writes step-by-step validation outputs;
+5. attaches total outpatient visits and distinct visit-day counts to each enrollment span; and
+6. writes a standardized results file for downstream analysis or reporting.
+
+## Why it matters
+
+Monthly eligibility or enrollment files are often stored at a grain that is not directly useful for analysis. This pipeline converts those records into analytically useful periods while preserving explicit QA checks and repeatable processing logic.
+
+The result is a structured dataset that can support questions such as:
+
+- How many distinct continuous enrollment periods does each patient have?
+- What outpatient utilization occurred during each enrollment period?
+- Are enrollment spans separated according to the expected continuity rules?
+- Can the same processing logic be rerun consistently as new files arrive?
+
+## Repository structure
+
+```text
 enrollment-visit-pipeline/
-├── data/ # Raw input files (not tracked by Git)
-├── output/ # Output files (not tracked by Git)
+├── data/                         # Input files; raw data are not tracked by Git
+├── output/                       # Generated outputs; not tracked by Git
 ├── pipeline/
-│ ├── io.py # Handles input file detection
-│ ├── transform.py # Data cleaning and enrollment span labeling
-│ ├── enrichment.py # Adds outpatient visit metrics
-│ ├── qa.py # Validates enrollment spans
-│ └── logger.py # Logging
-├── run_enrollment_pipeline.py # Main runner script
-├── requirements.txt # Python dependencies
-└── README.md # You’re here!
+│   ├── __init__.py
+│   ├── io.py                    # Input-file detection and validation
+│   ├── transform.py             # Date standardization and enrollment-span logic
+│   ├── enrichment.py            # Outpatient-visit metrics
+│   ├── qa.py                    # Enrollment-span QA checks
+│   ├── logger.py                # Logging configuration
+│   └── process_enrollment.py    # End-to-end orchestration
+├── run_enrollment_pipeline.py   # Command-line runner
+├── requirements.txt             # Python dependencies
+├── .gitignore
+└── README.md
 ```
 
+## Input expectations
 
-## How It Works
+Place the source files in `data/` using these filenames:
 
-1. Load monthly enrollment data (`patient_id_month_year - patient_id_month_year.csv`) and outpatient visit records (`outpatient_visits_file.csv`)**
-2. **Sort and group into continuous enrollment periods**
-3. **Run QA checks to identify spacing or formatting issues**
-5. **Count visits and distinct visit days per enrollment span**
-6. **Output to `output/results.csv`**
+### Enrollment file
 
+```text
+data/patient_id_month_year - patient_id_month_year.csv
+```
 
-## How to Run
-  ### Add enrollment and visits date to /data folder
+Required columns:
 
-    Input File Expectations
-      data/patient_id_month_year - patient_id_month_year.csv
-        Columns: patient_id, month_year
-    
-      data/outpatient_visits_file.csv
-        Columns: patient_id, date, outpatient_visit_count
-  
-  ### (Optional) Activate your virtual environment
-  source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-  
-  ### Run the pipeline
-  python run_enrollment_pipeline.py
-  
-  Note: You’ll be asked whether to enable QA mode (writes step-by-step Excel outputs and runs validation).
+- `patient_id`
+- `month_year`
 
+### Outpatient visit file
 
-## Output
+```text
+data/outpatient_visits_file.xlsx
+```
 
-  output/results.csv
-    Columns: patient_id, enrollment_start_date, enrollment_end_date, ct_outpatient_visits (total visits in the period), ct_days_with_outpatient_visit (number of distinct days with visits)
+Required columns:
 
+- `patient_id`
+- `date`
+- `outpatient_visit_count`
 
-## Git Ignore
-All raw data, output files, virtual envs, and logs are excluded from version control by .gitignore.
+Raw CSV/Excel files are excluded from version control by `.gitignore`.
+
+## How the transformation works
+
+For each patient, monthly enrollment records are sorted chronologically. Consecutive months are grouped into a single enrollment span. When a gap is detected, the current span is closed and a new span begins.
+
+Each resulting span contains:
+
+- `patient_id`
+- `enrollment_start_date`
+- `enrollment_end_date`
+
+The enrichment step then adds:
+
+- `ct_outpatient_visits` — total outpatient visits occurring during the enrollment span
+- `ct_days_with_outpatient_visit` — number of distinct days with at least one outpatient visit during the span
+
+## QA mode
+
+When QA mode is enabled, the pipeline writes intermediate Excel files and validates enrollment-span continuity before producing the final output.
+
+This makes the transformation easier to inspect and helps surface spacing or formatting problems before downstream use.
+
+## Running the pipeline
+
+Create and activate a Python virtual environment, then install the dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Run:
+
+```bash
+python run_enrollment_pipeline.py
+```
+
+You will be prompted to enable or disable QA mode.
+
+## Outputs
+
+Primary output:
+
+```text
+output/results.csv
+```
+
+Output columns:
+
+- `patient_id`
+- `enrollment_start_date`
+- `enrollment_end_date`
+- `ct_outpatient_visits`
+- `ct_days_with_outpatient_visit`
+
+When QA mode is enabled, additional intermediate validation files are written to `output/`.
+
+## Tools
+
+- Python
+- pandas
+- OpenPyXL
+
+## Privacy and use
+
+No raw patient-level data are included in this public repository. The `data/` and `output/` directories are intentionally excluded from version control except for placeholder files.
+
+This repository is intended as a portfolio example of healthcare data-processing and workflow design and is not a clinical application.
 
 ## Author
-Meagan Foster
-@meaganfoster
+
+**The DOMAS Group LLC**  
+Meagan Foster, MPS
