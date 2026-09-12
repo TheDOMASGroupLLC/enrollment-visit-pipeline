@@ -6,7 +6,7 @@ A healthcare data-processing workflow that converts monthly enrollment records i
 
 ## Project overview
 
-For a concise, non-technical summary of the workflow, see the [`case-study/`](case-study/) folder. The one-page project overview is intended for quick portfolio review, while the sections below document the technical workflow in more detail.
+For a concise, non-technical summary of the workflow, open the [`Enrollment & Outpatient Visit Processing Pipeline One-Page Overview (PDF)`](case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf). The [`case-study/`](case-study/) folder also contains supporting file information, while the sections below document the technical workflow in more detail.
 
 ## What this pipeline does
 
