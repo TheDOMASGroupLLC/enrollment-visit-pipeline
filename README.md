@@ -4,6 +4,10 @@ A healthcare data-processing workflow that converts monthly enrollment records i
 
 > **Portfolio note:** This repository is shared as a professional work sample demonstrating data transformation, QA, enrichment, logging, and reproducible workflow design. No raw patient-level data are included.
 
+## Project overview
+
+For a concise, non-technical summary of the workflow, see the [`case-study/`](case-study/) folder. The one-page project overview is intended for quick portfolio review, while the sections below document the technical workflow in more detail.
+
 ## What this pipeline does
 
 The workflow:
@@ -30,6 +34,9 @@ The result is a structured dataset that can support questions such as:
 
 ```text
 enrollment-visit-pipeline/
+├── case-study/
+│   ├── Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf
+│   └── README.md
 ├── data/                         # Input files; raw data are not tracked by Git
 ├── output/                       # Generated outputs; not tracked by Git
 ├── pipeline/
