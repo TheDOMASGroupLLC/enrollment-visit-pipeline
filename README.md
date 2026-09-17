@@ -1,34 +1,64 @@
-# Enrollment & Outpatient Visit Processing Pipeline
+# Enrollment & Outpatient Visit Processing
 
-A healthcare data-processing workflow that converts monthly enrollment records into continuous enrollment periods, validates span logic, and enriches each span with outpatient-visit utilization measures.
+## Custom Data Tool / Repeatable Processing
 
-> **Portfolio note:** This repository is shared as a professional work sample demonstrating data transformation, QA, enrichment, logging, and reproducible workflow design. No raw patient-level data are included.
+A focused healthcare data-processing tool that converts recurring enrollment and outpatient-visit source files into validated, analysis-ready outputs using explicit business rules, QA checks, and a standardized processing workflow.
 
-## Project overview
+> **Portfolio note:** This repository is shared as a professional work sample demonstrating how DOMAS can translate a recurring data-processing problem into a custom, repeatable tool. No raw patient-level data are included.
 
-For a concise, non-technical summary of the workflow, open the [`Enrollment & Outpatient Visit Processing Pipeline One-Page Overview (PDF)`](case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf). The [`case-study/`](case-study/) folder also contains supporting file information, while the sections below document the technical workflow in more detail.
+## Case study
 
-## What this pipeline does
+For a concise, non-technical summary, open the [`Enrollment & Outpatient Visit Processing - Custom Data Tool Case Study (PDF)`](case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf).
 
-The workflow:
+## What was built
 
-1. loads monthly enrollment records and outpatient visit data;
-2. standardizes and sorts enrollment dates;
-3. groups consecutive enrollment months into continuous enrollment spans;
-4. optionally runs QA checks on span continuity and writes step-by-step validation outputs;
-5. attaches total outpatient visits and distinct visit-day counts to each enrollment span; and
-6. writes a standardized results file for downstream analysis or reporting.
+The tool:
+
+1. accepts defined enrollment and outpatient-visit source files;
+2. validates required files and columns before processing;
+3. standardizes and sorts enrollment dates;
+4. groups consecutive enrollment months into continuous enrollment spans;
+5. optionally runs QA checks on span continuity and writes intermediate validation outputs;
+6. attaches total outpatient visits and distinct visit-day counts to each enrollment span; and
+7. writes a standardized results file for downstream analysis or reporting.
+
+### How a team would use it
+
+```text
+Provide defined source files
+        ↓
+Run the processing tool
+        ↓
+Review QA and validation outputs
+        ↓
+Use the standardized result
+```
+
+The value is not the script itself. The value is having the agreed definitions, business rules, QA checks, and output structure encoded into a repeatable workflow so the same process can be run consistently as new data arrive.
+
+## What is encoded in the tool
+
+- required file and column checks;
+- date standardization rules;
+- consecutive-month enrollment logic;
+- enrollment-span continuity rules;
+- outpatient-visit totals and distinct visit-day calculations;
+- optional QA checks and intermediate validation outputs;
+- standardized output structure; and
+- logging for repeatable runs.
 
 ## Why it matters
 
-Monthly eligibility or enrollment files are often stored at a grain that is not directly useful for analysis. This pipeline converts those records into analytically useful periods while preserving explicit QA checks and repeatable processing logic.
+Monthly eligibility or enrollment files are often stored at a grain that is not directly useful for analysis. This tool converts those records into analytically useful periods while preserving explicit QA checks and repeatable processing logic.
 
-The result is a structured dataset that can support questions such as:
+The resulting dataset can support questions such as:
 
 - How many distinct continuous enrollment periods does each patient have?
 - What outpatient utilization occurred during each enrollment period?
 - Are enrollment spans separated according to the expected continuity rules?
 - Can the same processing logic be rerun consistently as new files arrive?
+
+This same custom-tool approach can be applied to other recurring reporting, validation, reconciliation, classification, or file-processing workflows.
 
 ## Repository structure
 
@@ -94,16 +124,16 @@ Each resulting span contains:
 
 The enrichment step then adds:
 
-- `ct_outpatient_visits` — total outpatient visits occurring during the enrollment span
-- `ct_days_with_outpatient_visit` — number of distinct days with at least one outpatient visit during the span
+- `ct_outpatient_visits` - total outpatient visits occurring during the enrollment span
+- `ct_days_with_outpatient_visit` - number of distinct days with at least one outpatient visit during the span
 
 ## QA mode
 
-When QA mode is enabled, the pipeline writes intermediate Excel files and validates enrollment-span continuity before producing the final output.
+When QA mode is enabled, the tool writes intermediate Excel files and validates enrollment-span continuity before producing the final output.
 
 This makes the transformation easier to inspect and helps surface spacing or formatting problems before downstream use.
 
-## Running the pipeline
+## Running the tool
 
 Create and activate a Python virtual environment, then install the dependencies:
 
@@ -149,7 +179,7 @@ When QA mode is enabled, additional intermediate validation files are written to
 
 No raw patient-level data are included in this public repository. The `data/` and `output/` directories are intentionally excluded from version control except for placeholder files.
 
-This repository is intended as a portfolio example of healthcare data-processing and workflow design and is not a clinical application.
+This portfolio example uses a command-line runner rather than a graphical interface. It demonstrates the processing and QA architecture behind a custom data tool and is not a clinical application.
 
 ## Author
 
