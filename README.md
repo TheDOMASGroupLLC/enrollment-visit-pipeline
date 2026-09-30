@@ -19,6 +19,7 @@ The pipeline:
 pipeline/
 case-study/
 data/
+sample_data/
 output/
 run_enrollment_pipeline.py
 requirements.txt
@@ -61,6 +62,18 @@ The outpatient visit step adds:
 
 QA mode writes intermediate Excel files and checks that a patient's enrollment spans are separated by at least one full month.
 
+## Synthetic sample data
+
+A fully fictional test dataset is included in `sample_data/` so the pipeline can be exercised without original project data.
+
+To run the end-to-end sample and compare the output with known expected results:
+
+```bash
+python sample_data/verify_sample.py
+```
+
+See `sample_data/README.md` for the sample contents and a direct-run example.
+
 ## Running
 
 ```bash
@@ -92,4 +105,4 @@ case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf
 
 ## Notes
 
-No raw patient-level data are included in this repository. This code is provided as a technical work sample and is not a clinical application.
+No real patient-level data are included in this repository. The records in `sample_data/` are synthetic and fictional. This code is provided as a technical work sample and is not a clinical application.

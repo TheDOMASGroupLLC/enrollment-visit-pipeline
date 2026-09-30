@@ -16,6 +16,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Compile Python
-        run: python -m compileall pipeline run_enrollment_pipeline.py
+        run: python -m compileall pipeline run_enrollment_pipeline.py sample_data/verify_sample.py
       - name: Import pipeline modules
         run: python -c "from pipeline.process_enrollment import process_enrollment; from pipeline.transform import summarize_enrollment_spans"
+      - name: Run synthetic sample
+        run: python sample_data/verify_sample.py
