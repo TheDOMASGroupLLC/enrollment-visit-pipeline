@@ -73,27 +73,14 @@ jobs:
           fg = tuple(v / 255 for v in fg255)
           print("Background sample:", bg, "Text color:", fg)
 
-          font_alias = "replacement_font"
-          font_loaded = False
-          source_font = span.get("font", "")
-          for font in page.get_fonts(full=True):
-              xref, ext, font_type, basefont, name, encoding, *rest = font
-              normalized = basefont.split("+")[-1]
-              if source_font in {basefont, normalized, name} or source_font in basefont:
-                  try:
-                      extracted = doc.extract_font(xref)
-                      font_bytes = extracted[3]
-                      if font_bytes:
-                          page.insert_font(fontname=font_alias, fontbuffer=font_bytes)
-                          font_loaded = True
-                          print("Using embedded font:", basefont, "xref", xref)
-                          break
-                  except Exception as exc:
-                      print("Font extraction failed:", exc)
-
-          if not font_loaded:
-              font_alias = "helv"
-              print("Falling back to Helvetica")
+          import subprocess
+          font_path = subprocess.check_output(
+              ["fc-match", "Noto Sans", "-f", "%{file}"],
+              text=True,
+          ).strip()
+          if not font_path:
+              raise RuntimeError("Noto Sans font not available on runner.")
+          print("Using font:", font_path)
 
           pad_x = 1.5
           pad_y = 1.0
@@ -107,7 +94,8 @@ jobs:
               fitz.Point(rect.x0, baseline_y),
               new_text,
               fontsize=fontsize,
-              fontname=font_alias,
+              fontname="noto",
+              fontfile=font_path,
               color=fg,
               overlay=True,
           )
