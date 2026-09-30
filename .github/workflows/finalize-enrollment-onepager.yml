@@ -56,22 +56,13 @@ jobs:
           if source_span is None:
               raise RuntimeError("Could not identify source span.")
 
-          font_bytes = None
-          source_font = source_span["font"]
-          for font in page.get_fonts(full=True):
-              xref, ext, font_type, basefont, name, encoding, *rest = font
-              normalized = basefont.split("+")[-1]
-              if source_font in {basefont, normalized, name} or source_font in basefont:
-                  extracted = doc.extract_font(xref)
-                  if extracted and extracted[3]:
-                      font_bytes = extracted[3]
-                      break
-          if not font_bytes:
-              raise RuntimeError("Could not extract embedded Noto Sans font.")
-
-          font_path = "/tmp/enrollment-source-font.ttf"
-          with open(font_path, "wb") as handle:
-              handle.write(font_bytes)
+          import subprocess
+          font_path = subprocess.check_output(
+              ["fc-match", "DejaVu Sans", "-f", "%{file}"],
+              text=True,
+          ).strip()
+          if not font_path:
+              raise RuntimeError("DejaVu Sans font not available on runner.")
 
           fg255 = fitz.sRGB_to_rgb(source_span["color"])
           fg = tuple(v / 255 for v in fg255)
@@ -85,7 +76,7 @@ jobs:
               fitz.Point(rect.x0, float(source_span["origin"][1])),
               new_text,
               fontsize=float(source_span["size"]),
-              fontname="noto",
+              fontname="replacement",
               fontfile=font_path,
               color=fg,
               overlay=True,
