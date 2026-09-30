@@ -97,11 +97,9 @@ QA mode also writes intermediate validation files to `output/`.
 
 ## Case study
 
-A one-page project overview is available at:
+The full project case study is available on The DOMAS Group website:
 
-```text
-case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf
-```
+[Enrollment & Outpatient Visit Processing](https://thedomasgroup.com/case-studies/enrollment-outpatient-visit-processing)
 
 ## Notes
 
