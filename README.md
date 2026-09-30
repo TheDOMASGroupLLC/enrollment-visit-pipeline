@@ -46,6 +46,8 @@ Required columns: `patient_id`, `date`, `outpatient_visit_count`.
 
 ## Enrollment span logic
 
+Before span construction, the pipeline checks required fields, invalid month values, missing patient IDs, and duplicate patient-month records.
+
 Enrollment records are sorted by patient and month. Consecutive months are grouped into one span. A gap starts a new span.
 
 Each span contains `patient_id`, `enrollment_start_date`, and `enrollment_end_date`.
