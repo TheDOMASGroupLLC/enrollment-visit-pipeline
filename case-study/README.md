@@ -1,8 +1,8 @@
 # Case Study
 
-This folder contains the one-page overview for the Enrollment & Outpatient Visit Processing project.
+The public case study for this project is maintained on The DOMAS Group website:
 
-- `Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf`
+[Enrollment & Outpatient Visit Processing](https://thedomasgroup.com/case-studies/enrollment-outpatient-visit-processing)
 
 The source code and technical workflow are documented in the repository README.
 
