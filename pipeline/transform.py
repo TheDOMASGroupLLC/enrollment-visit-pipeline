@@ -2,8 +2,33 @@ import os
 import pandas as pd
 
 def convert_month_year_to_datetime(df, output_dir=None, test_mode=False):
-    # Normalize enrollment dates to month start.
-    df['month_year'] = pd.to_datetime(df['month_year'], errors='coerce').dt.to_period('M').dt.to_timestamp()
+    required = {"patient_id", "month_year"}
+    missing = required.difference(df.columns)
+    if missing:
+        raise ValueError(
+            f"Enrollment file is missing required column(s): {', '.join(sorted(missing))}"
+        )
+    if df.empty:
+        raise ValueError("Enrollment file contains no records.")
+    if df["patient_id"].isna().any():
+        raise ValueError("Enrollment file contains missing patient_id values.")
+
+    parsed_months = pd.to_datetime(df["month_year"], errors="coerce")
+    if parsed_months.isna().any():
+        invalid_count = int(parsed_months.isna().sum())
+        raise ValueError(
+            f"Enrollment file contains {invalid_count} invalid or missing month_year value(s)."
+        )
+
+    df = df.copy()
+    df["month_year"] = parsed_months.dt.to_period("M").dt.to_timestamp()
+
+    duplicate_mask = df.duplicated(subset=["patient_id", "month_year"], keep=False)
+    if duplicate_mask.any():
+        duplicate_count = int(duplicate_mask.sum())
+        raise ValueError(
+            f"Enrollment file contains {duplicate_count} duplicate patient-month record(s)."
+        )
 
     if test_mode and output_dir:
         df.to_excel(os.path.join(output_dir, "step2_datetime.xlsx"), index=False)
