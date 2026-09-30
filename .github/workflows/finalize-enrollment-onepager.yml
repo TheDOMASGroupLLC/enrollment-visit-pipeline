@@ -67,8 +67,15 @@ jobs:
           fg255 = fitz.sRGB_to_rgb(source_span["color"])
           fg = tuple(v / 255 for v in fg255)
 
-          # Use the exact search rectangle vertically so the next bullet is untouched.
-          redact_rect = fitz.Rect(rect.x0 - 0.25, rect.y0, rect.x1 + 0.25, rect.y1)
+          # Use a narrow strip through the middle of the target line. Redaction
+          # removes intersecting text objects while avoiding the next line's
+          # slightly overlapping text bounding box.
+          redact_rect = fitz.Rect(
+              rect.x0 - 0.25,
+              rect.y0 + 2.5,
+              rect.x1 + 0.25,
+              rect.y0 + 6.5,
+          )
           page.add_redact_annot(redact_rect, fill=(1, 1, 1))
           page.apply_redactions()
 
