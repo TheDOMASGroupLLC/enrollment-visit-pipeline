@@ -1,0 +1,128 @@
+name: Finalize enrollment one-pager
+
+on:
+  push:
+    paths:
+      - ".github/workflows/finalize-enrollment-onepager.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore original PDF source
+        run: |
+          git show 1da324cfcc226f08c62bc3a3e705a8e709a98f34:case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf > case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf
+
+      - name: Install PDF tooling
+        run: pip install pymupdf
+
+      - name: Replace terminology and verify
+        run: |
+          python - <<'PY'
+          import os
+          import fitz
+
+          path = "case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf"
+          old_text = "Resident-level period construction from recurring files"
+          new_text = "Patient-level period construction from recurring files"
+          next_bullet = "Visit enrichment tied to each valid enrollment period"
+
+          doc = fitz.open(path)
+          page = doc[0]
+
+          matches = page.search_for(old_text)
+          if len(matches) != 1:
+              raise RuntimeError(f"Expected one match for {old_text!r}, found {len(matches)}")
+          rect = matches[0]
+
+          source_span = None
+          for block in page.get_text("dict")["blocks"]:
+              for line in block.get("lines", []):
+                  for span in line.get("spans", []):
+                      if old_text in span.get("text", ""):
+                          source_span = span
+                          break
+                  if source_span:
+                      break
+              if source_span:
+                  break
+          if source_span is None:
+              raise RuntimeError("Could not identify source span.")
+
+          font_bytes = None
+          source_font = source_span["font"]
+          for font in page.get_fonts(full=True):
+              xref, ext, font_type, basefont, name, encoding, *rest = font
+              normalized = basefont.split("+")[-1]
+              if source_font in {basefont, normalized, name} or source_font in basefont:
+                  extracted = doc.extract_font(xref)
+                  if extracted and extracted[3]:
+                      font_bytes = extracted[3]
+                      break
+          if not font_bytes:
+              raise RuntimeError("Could not extract embedded Noto Sans font.")
+
+          font_path = "/tmp/enrollment-source-font.ttf"
+          with open(font_path, "wb") as handle:
+              handle.write(font_bytes)
+
+          fg255 = fitz.sRGB_to_rgb(source_span["color"])
+          fg = tuple(v / 255 for v in fg255)
+
+          # Use the exact search rectangle vertically so the next bullet is untouched.
+          redact_rect = fitz.Rect(rect.x0 - 0.25, rect.y0, rect.x1 + 0.25, rect.y1)
+          page.add_redact_annot(redact_rect, fill=(1, 1, 1))
+          page.apply_redactions()
+
+          page.insert_text(
+              fitz.Point(rect.x0, float(source_span["origin"][1])),
+              new_text,
+              fontsize=float(source_span["size"]),
+              fontname="noto",
+              fontfile=font_path,
+              color=fg,
+              overlay=True,
+          )
+
+          temp = path + ".tmp.pdf"
+          doc.save(temp, garbage=4, deflate=True)
+          doc.close()
+
+          check = fitz.open(temp)
+          text = check[0].get_text()
+          if new_text not in text:
+              raise RuntimeError("Replacement text not found.")
+          if old_text in text:
+              raise RuntimeError("Old terminology still present.")
+          if next_bullet not in text:
+              raise RuntimeError("The following bullet was damaged or removed.")
+          if text.count(next_bullet) != 1:
+              raise RuntimeError("Unexpected duplicate of the following bullet.")
+
+          check[0].get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False).save("onepager-final-preview.png")
+          check.close()
+          os.replace(temp, path)
+          print("Final PDF text checks passed.")
+          PY
+
+      - name: Upload visual verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: enrollment-onepager-final-preview
+          path: onepager-final-preview.png
+
+      - name: Commit corrected PDF and remove temporary workflow
+        run: |
+          rm .github/workflows/finalize-enrollment-onepager.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add case-study/Enrollment_Outpatient_Visit_Processing_Pipeline_One_Pager.pdf .github/workflows/finalize-enrollment-onepager.yml
+          git commit -m "Finalize enrollment case study terminology"
+          git push
