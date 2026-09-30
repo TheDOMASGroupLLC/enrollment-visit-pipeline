@@ -54,6 +54,21 @@ def process_enrollment(input_dir, output_dir, test_mode=False):
     visits_df = pd.read_excel(visit_path)
     logger.info(f"Loaded outpatient visits: {visit_path}")
 
+    required_visit_columns = {"patient_id", "date", "outpatient_visit_count"}
+    missing_visit_columns = required_visit_columns.difference(visits_df.columns)
+    if missing_visit_columns:
+        raise ValueError(
+            "Outpatient visit file is missing required column(s): "
+            + ", ".join(sorted(missing_visit_columns))
+        )
+    if visits_df["patient_id"].isna().any():
+        raise ValueError("Outpatient visit file contains missing patient_id values.")
+
+    visits_df["date"] = pd.to_datetime(visits_df["date"], errors="raise")
+    visits_df["outpatient_visit_count"] = pd.to_numeric(
+        visits_df["outpatient_visit_count"], errors="raise"
+    )
+
     results = attach_outpatient_visit_counts(enrollment_spans, visits_df)
     logger.info("Attached outpatient visit metrics.")
 
